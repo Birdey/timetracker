@@ -1,216 +1,214 @@
+"""
+Database module
+---------------
+This module contains the class for interacting with the database.
+
+Classes
+-------
+Database
+    Class for interacting with the database
+"""
+
+from datetime import date as Date
 import sqlite3
 
 
 class Database:
+    """
+    Class for interacting with the database
+
+    Attributes
+    ----------
+    >>> database_name : str
+        The name of the database
+
+    Methods
+    -------
+    >>> create_database() -> None
+        Create the database
+
+    >>> add_data(application: str, time: int, date: Date) -> None
+        Add data to the database
+
+    >>> insert_data(application: str, time: int, date: Date) -> None
+        Insert data into the database
+
+    >>> view_data() -> None
+        View the data in the database
+
+    >>> delete_data(application: str) -> None
+        Delete data from the database
+
+    >>> update_data(application: str, time: int, date: Date) -> None
+        Update data in the database
+
+    >>> total_time_spent() -> int
+        Get the total time spent on all applications
+
+    >>> total_time_spent_on_app(application: str) -> int
+        Get the total time spent on a specific application
+
+    >>> total_time_spent_on_app_on_date(application: str, date: Date) -> int
+        Get the total time spent on a specific application on a specific date
+
+    >>> total_time_spent_on_app_for_dates(application: str, start_date: Date, end_date: Date) -> int
+        Get the total time spent on a specific application for specific dates
+    """
+
     def __init__(self, database_name):
         self.database_name = database_name
+        self.create_database()
 
-    def add_data(self, application, time, date):
-        # insert data into the database
-        SQL_statement = "INSERT INTO time_tracker VALUES (?, ?, ?)"
-        data = (application, time, date)
-
-        # create connection
+    def _query_commit(self, sql_statement: str, variables: tuple = None) -> None:
         connection = sqlite3.connect(self.database_name)
-
-        # create cursor
         cursor = connection.cursor()
-
-        # execute SQL statement
-        cursor.execute(SQL_statement, data)
-
-        # commit changes
+        if variables:
+            cursor.execute(sql_statement, variables)
+        else:
+            cursor.execute(sql_statement)
         connection.commit()
-
-        # close connection
         connection.close()
 
-    def create_database():
-        # create a local database using sqlite3
-        database_name = "time_tracker.db"
-
-        # create connection
-        connection = sqlite3.connect(database_name)
-
-        # create cursor
+    def _query_fetch(self, sql_statement: str, variables: tuple = None) -> list:
+        connection = sqlite3.connect(self.database_name)
         cursor = connection.cursor()
+        if variables:
+            cursor.execute(sql_statement, variables)
+        else:
+            cursor.execute(sql_statement)
+        data = cursor.fetchall()
+        connection.close()
+        return data
 
-        # create table
-        cursor.execute(
-            """CREATE TABLE IF NOT EXISTS time_tracker (
-            application_name text,
-            time_spent integer,
-            date_used text
-        )"""
-        )
-
-        # close connection
+    def _query_execute(self, sql_statement: str, variables: tuple = None) -> None:
+        connection = sqlite3.connect(self.database_name)
+        cursor = connection.cursor()
+        if variables:
+            cursor.execute(sql_statement, variables)
+        else:
+            cursor.execute(sql_statement)
         connection.close()
 
-    def insert_data(application, time, date):
-        # insert data into the database
-        SQL_statement = "INSERT INTO time_tracker VALUES (?, ?, ?)"
+    def create_database(self) -> None:
+        """
+        Create the database
+        """
+        sql_statement = "CREATE TABLE IF NOT EXISTS time_tracker (application_name text, time_spent integer, date_used text)"
+        self._query_execute(sql_statement)
+
+    def add_data(self, application: str, time: int, date: Date) -> None:
+        """
+        Add data to the database
+
+            Parameters:
+                application (str): The name of the application
+                time (int): The time spent on the application
+                date (date): The date when the application was used
+        """
+        sql_statement = "INSERT INTO time_tracker VALUES (?, ?, ?)"
         data = (application, time, date)
+        self._query_commit(sql_statement, data)
 
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
+    def insert_data(self, application: str, time: int, date: Date) -> None:
+        """
+        Insert data into the database
 
-        # create cursor
-        cursor = connection.cursor()
+            Parameters:
+                application (str): The name of the application
+                time (int): The time spent on the application
+                date (date): The date when the application was used
+        """
+        sql_statement = "INSERT INTO time_tracker VALUES (?, ?, ?)"
+        data = (application, time, date)
+        self._query_commit(sql_statement, data)
 
-        # execute SQL statement
-        cursor.execute(SQL_statement, data)
+    def view_data(self):
+        """
+        View the data in the database
 
-        # commit changes
-        connection.commit()
+            Returns:
+                list: The data from the database
+        """
+        sql_statement = "SELECT * FROM time_tracker"
+        data = self._query_fetch(sql_statement)
+        return data
 
-        # close connection
-        connection.close()
+    def delete_data(self, application):
+        """
+        Delete data from the database
 
-    def view_data():
-        # view data from the database
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
+            Parameters:
+                application (str): The name of the application
+        """
+        sql_statement = "DELETE FROM time_tracker WHERE application_name = (?)"
+        self._query_commit(sql_statement, (application,))
 
-        # create cursor
-        cursor = connection.cursor()
+    def update_data(self, application, time, date):
+        """
+        Update data in the database
 
-        # execute SQL statement
-        cursor.execute("SELECT * FROM time_tracker")
+            Parameters:
+                application (str): The name of the application
+                time (int): The time spent on the application
+                date (date): The date when the application was used
+        """
+        sql_statement = "UPDATE time_tracker SET time_spent = (?), date_used = (?) WHERE application_name = (?)"
+        self._query_commit(sql_statement, (time, date, application))
 
-        # fetch data
-        data = cursor.fetchall()
+    def total_time_spent(self):
+        """
+        Get the total time spent on all applications
 
-        # print data
-        print(data)
+            Returns:
+                int: The total time spent on all applications
+        """
+        sql_statement = "SELECT SUM(time_spent) FROM time_tracker"
+        data = self._query_fetch(sql_statement)
+        return data
 
-        # close connection
-        connection.close()
+    def total_time_spent_on_app(self, application):
+        """
+        Get the total time spent on a specific application
 
-    def delete_data(application):
-        # delete data from the database
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
+            Parameters:
+                application (str): The name of the application
 
-        # create cursor
-        cursor = connection.cursor()
-
-        # execute SQL statement
-        cursor.execute(
-            "DELETE FROM time_tracker WHERE application_name = (?)", (application,)
+            Returns:
+                int: The total time spent on a specific application
+        """
+        sql_statement = (
+            "SELECT SUM(time_spent) FROM time_tracker WHERE application_name = (?)"
         )
+        data = self._query_fetch(sql_statement, (application,))
+        return data[0][0]
 
-        # commit changes
-        connection.commit()
+    def total_time_spent_on_app_on_date(self, application, date):
+        """
+        Get the total time spent on a specific application on a specific date
 
-        # close connection
-        connection.close()
+            Parameters:
+                application (str): The name of the application
+                date (date): The date when the application was used
 
-    def update_data(application, time, date):
-        # update data from the database
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
+            Returns:
+                int: The total time spent on a specific application on a specific date
+        """
+        sql_statement = "SELECT SUM(time_spent) FROM time_tracker WHERE application_name = (?) AND date_used = (?)"
+        data = self._query_fetch(sql_statement, (application, date))
+        return data
 
-        # create cursor
-        cursor = connection.cursor()
+    def total_time_spent_on_app_for_dates(self, application, start_date, end_date):
+        """
+        Get the total time spent on a specific application for specific dates
 
-        # execute SQL statement
-        cursor.execute(
-            "UPDATE time_tracker SET time_spent = (?), date_used = (?) WHERE application_name = (?)",
-            (time, date, application),
-        )
+            Parameters:
+                application (str): The name of the application
+                start_date (date): The start date when the application was used
+                end_date (date): The end date when the application was used
 
-        # commit changes
-        connection.commit()
-
-        # close connection
-        connection.close()
-
-    def total_time_spent():
-        # calculate the total time spent on all applications
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
-
-        # create cursor
-        cursor = connection.cursor()
-
-        # execute SQL statement
-        cursor.execute("SELECT SUM(time_spent) FROM time_tracker")
-
-        # fetch data
-        data = cursor.fetchall()
-
-        # print data
-        print(data)
-
-        # close connection
-        connection.close()
-
-    def total_time_spent_on_app(application):
-        # calculate the total time spent on a specific application
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
-
-        # create cursor
-        cursor = connection.cursor()
-
-        # execute SQL statement
-        cursor.execute(
-            "SELECT SUM(time_spent) FROM time_tracker WHERE application_name = (?)",
-            (application,),
-        )
-
-        # fetch data
-        data = cursor.fetchall()
-
-        # print data
-        print(data)
-
-        # close connection
-        connection.close()
-
-    def total_time_spent_on_app_on_date(application, date):
-        # calculate the total time spent on a specific application on a specific date
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
-
-        # create cursor
-        cursor = connection.cursor()
-
-        # execute SQL statement
-        cursor.execute(
-            "SELECT SUM(time_spent) FROM time_tracker WHERE application_name = (?) AND date_used = (?)",
-            (application, date),
-        )
-
-        # fetch data
-        data = cursor.fetchall()
-
-        # print data
-        print(data)
-
-        # close connection
-        connection.close()
-
-    def total_time_spent_on_app_for_dates(application, start_date, end_date):
-        # calculate the total time spent on a specific application on a specific week
-        # create connection
-        connection = sqlite3.connect("time_tracker.db")
-
-        # create cursor
-        cursor = connection.cursor()
-
-        # execute SQL statement
-        cursor.execute(
-            "SELECT SUM(time_spent) FROM time_tracker WHERE application_name = (?) AND date_used BETWEEN (?) AND (?)",
-            (application, start_date, end_date),
-        )
-
-        # fetch data
-        data = cursor.fetchall()
-
-        # print data
-        print(data)
-
-        # close connection
-        connection.close()
+            Returns:
+                int: The total time spent on a specific application for specific dates
+        """
+        sql_statement = "SELECT SUM(time_spent) FROM time_tracker WHERE application_name = (?) AND date_used BETWEEN (?) AND (?)"
+        data = self._query_fetch(sql_statement, (application, start_date, end_date))
+        return data

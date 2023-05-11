@@ -27,23 +27,33 @@ The GUI should also allow you to:
 - View the total amount of time spent on the application or website on a specific date
 - View the total amount of time spent on the application or website on a specific week
 """
+
+# pylint: disable=no-name-in-module, line-too-long, missing-module-docstring, missing-function-docstring, missing-class-docstring
+
 import datetime
 import sys
 from time import sleep
 import time
 
-import applescript
 
-from AppKit import NSWorkspace
+# import applescript
+
+from AppKit import NSWorkspace  # E0611: No name 'NSWorkspace' in module 'AppKit'
 
 from Quartz import (
-    CGWindowListCopyWindowInfo,
-    kCGWindowListOptionOnScreenOnly,
-    kCGNullWindowID,
+    CGWindowListCopyWindowInfo,  # E0611: No name 'CGWindowListCopyWindowInfo' in module 'Quartz'
+    kCGWindowListOptionOnScreenOnly,  # E0611: No name 'kCGWindowListOptionOnScreenOnly' in module 'Quartz'
+    kCGNullWindowID,  # E0611: No name 'kCGNullWindowID' in module 'Quartz'
 )
+
+from db import Database
+
+
+db = Database("time_tracker_db.db")
 
 
 def _get_active_window_win32():
+    # TODO: Implement this function when I get code on my Windows machine
     pass
 
 
@@ -57,7 +67,6 @@ def _get_active_window_darwin():
     for window in window_list:
         pid = window["kCGWindowOwnerPID"]
         if curr_pid == pid:
-            window_number = window["kCGWindowNumber"]
             owner_name = window["kCGWindowOwnerName"]
             window_name = window.get("kCGWindowName", "Unknown")
             # print(
@@ -68,11 +77,12 @@ def _get_active_window_darwin():
 
 
 def _review_active_info(owner_name, window_name):
-    if owner_name == "Google Chrome":
+    if owner_name == "Safari":
+        if " - Safari" in window_name:
+            window_name = window_name[: -len(" - Safari")]
+    elif owner_name == "Google Chrome":
         if " - Google Chrome" in window_name:
             window_name = window_name[: -len(" - Google Chrome")]
-        elif " - Firefox" in window_name:
-            window_name = window_name[: -len(" - Firefox")]
     elif "Code" in owner_name:
         window_name = "Visual Studio Code"
     elif owner_name == "iTerm2":
@@ -81,15 +91,35 @@ def _review_active_info(owner_name, window_name):
     return owner_name, window_name
 
 
-def get_current_window(event_window_num):
-    # Get the current application name on macOS
+def get_current_window():
+    """
+    Get the current window
+
+        Parameters:
+            event_window_num (int): The number of the window
+
+        Returns:
+            str, str: The name of the application and the name of the window
+    """
     try:
         if sys.platform == "darwin":
             return _get_active_window_darwin()
         if sys.platform == "win32":
             return _get_active_window_win32()
 
-    except:
+    except KeyboardInterrupt:
+        print("Stopping time tracker")
+        sys.exit()
+
+    except SystemExit:
+        print("Stopping time tracker")
+        sys.exit()
+
+    except NameError:
+        print("NameError: %s", sys.exc_info()[0])
+        print("error line number: %s", sys.exc_info()[-1].tb_lineno)
+
+    except Exception:
         print("Unexpected error: %s", sys.exc_info()[0])
         print("error line number: %s", sys.exc_info()[-1].tb_lineno)
 
@@ -97,23 +127,36 @@ def get_current_window(event_window_num):
 
 
 def report(application_name: str, start_time: int, end_time: int):
-    # Report the time spent on a specific application
+    """
+    Saves reported data to the database
+
+        Parameters:
+            application_name (str): The name of the application
+            start_time (int): The start time
+            end_time (int): The end time
+    """
+    if application_name.strip() == "":
+        print("Not reporting app because it's empty.")
+        print(f"time: {seconds_to_hms(end_time - start_time)}")
+        return
     running_time = end_time - start_time
     hms = seconds_to_hms(int(running_time))
+    db.add_data(application_name, running_time, datetime.date.today())
+    total_time = round(db.total_time_spent_on_app(application_name), 2)
     print(f'App "{application_name}" for {hms}')
+    print(f"Total time spent on app: {seconds_to_hms(total_time)}")
 
 
 def start():
-    # Start the time tracker
+    """
+    Start the program
+    """
     current_application = ""
     start_time = time.time()
     while True:
-        pid = NSWorkspace.sharedWorkspace().activeApplication()[
-            "NSApplicationProcessIdentifier"
-        ]
-        owner_name, window_name = get_current_window(pid)
+        owner_name, window_name = get_current_window()
         if window_name == "Unknown":
-            window_name = owner_name + " - " + window_name
+            window_name = owner_name + " - Application"
 
         if window_name != current_application:
             report(current_application, start_time, time.time())
@@ -124,7 +167,15 @@ def start():
 
 
 def seconds_to_hms(seconds: int):
-    # convert seconds to h:m:s
+    """
+    Convert seconds to hours, minutes and seconds
+
+        Parameters:
+            seconds (int): The number of seconds
+
+        Returns:
+            str: The hours, minutes and seconds in a string
+    """
     hours = int(seconds / 3600)
     seconds = seconds % 3600
     minutes = int(seconds / 60)
@@ -141,9 +192,5 @@ def seconds_to_hms(seconds: int):
     return r_string
 
 
-def main():
-    start()
-
-
 if __name__ == "__main__":
-    main()
+    start()
