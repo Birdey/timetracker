@@ -161,22 +161,11 @@ class WindowManager:
         text_box = tk.Text(self.window)
         text_box.place(x=pos[0], y=pos[1], width=size[0], height=size[1])
 
-    def close_window(self):
-        """
-        Close the main window
-        """
-        if self.window is not None:
-            self.window.withdraw()
-            self.window.destroy()
-
     def show(self):
         """
         Show the main window
         """
-        try:
-            self.window.mainloop()
-        except SystemExit:
-            self.window.destroy()
+        self.window.mainloop()
 
     def hide(self):
         """
@@ -202,3 +191,9 @@ class WindowManager:
         Update the main window
         """
         self.window.update()
+
+    def destroy(self):
+        """
+        Destroy the main window
+        """
+        self.window.destroy()

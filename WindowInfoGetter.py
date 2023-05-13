@@ -2,6 +2,18 @@
 
 import sys
 import importlib.util
+from time import sleep
+
+if importlib.util.find_spec("win32gui") is not None:
+    import win32gui  # pylint: disable=import-error
+
+if importlib.util.find_spec("AppKit") is not None:
+    from AppKit import NSWorkspace
+    from Quartz import (
+        CGWindowListCopyWindowInfo,
+        kCGWindowListOptionOnScreenOnly,
+        kCGNullWindowID,
+    )
 
 
 class WindowInfoGetter:
@@ -19,14 +31,6 @@ class WindowInfoGetter:
 
     @staticmethod
     def _get_active_window_win32():
-        spam_spec = importlib.util.find_spec("win32gui")
-        if spam_spec is None:
-            raise ModuleNotFoundError(
-                "You must have pywin32 installed to use this module"
-            )
-
-        import win32gui
-
         window = win32gui.GetForegroundWindow()
         window_name = win32gui.GetWindowText(window)
         application_name = win32gui.GetClassName(window)
@@ -35,22 +39,6 @@ class WindowInfoGetter:
 
     @staticmethod
     def _get_active_window_darwin():
-        spam_spec = importlib.util.find_spec("AppKit")
-        if spam_spec is None:
-            raise ModuleNotFoundError(
-                "You must have pyobjc installed to use this module"
-            )
-
-        from AppKit import (
-            NSWorkspace,
-        )  # E0611: No name 'NSWorkspace' in module 'AppKit'
-
-        from Quartz import (
-            CGWindowListCopyWindowInfo,  # E0611: No name 'CGWindowListCopyWindowInfo' in module 'Quartz'
-            kCGWindowListOptionOnScreenOnly,  # E0611: No name 'kCGWindowListOptionOnScreenOnly' in module 'Quartz'
-            kCGNullWindowID,  # E0611: No name 'kCGNullWindowID' in module 'Quartz'
-        )
-
         curr_pid = NSWorkspace.sharedWorkspace().activeApplication()[
             "NSApplicationProcessIdentifier"
         ]
@@ -121,27 +109,50 @@ class WindowInfoGetter:
             print("Stopping time tracker")
             sys.exit()
 
-        except NameError:
-            print("NameError: %s", sys.exc_info()[0])
-            print("error line number: %s", sys.exc_info()[-1].tb_lineno)
-            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
+        except NameError as error:
+            WindowInfoGetter._print_error_message(error)
 
         except ModuleNotFoundError as error:
-            print("ModuleNotFoundError: %s", error)
-            print("error line number: %s", sys.exc_info()[-1].tb_lineno)
-            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
-            print(error.with_traceback())
-            print("Please install the missing module and try again")
-            exit(1)
+            WindowInfoGetter._print_error_message(error)
 
-        except ValueError:
-            print("ValueError: %s", sys.exc_info()[0])
-            print("error line number: %s", sys.exc_info()[-1].tb_lineno)
-            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
+        except ValueError as error:
+            WindowInfoGetter._print_error_message(error)
 
-        except Exception:
-            print("Unexpected error: %s", sys.exc_info()[0])
-            print("error line number: %s", sys.exc_info()[-1].tb_lineno)
-            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
+        except Exception as error:
+            WindowInfoGetter._print_error_message(error)
 
         return "UnknownApplication", "UnknownWindowName"
+
+    # def _print_exception_message(self, exception: Exception):
+    #     """
+    #     Print the exception message
+
+    #         Parameters:
+    #             exception (Exception): The exception
+    #     """
+    #     print("===================================")
+    #     print(f"{exception.name}: \n'{exception}'")
+    #     print(f"file name: {sys.exc_info()[-1].tb_frame.f_code.co_filename}")
+    #     print(f"error line number: {sys.exc_info()[-1].tb_lineno}")
+    #     print("-----------------------------------")
+    #     print(f"Traceback: \n{exception.with_traceback()}"
+    #     print("-----------------------------------")
+    #     print("===================================")
+
+    @staticmethod
+    def _print_error_message(error):
+        """
+        Print the error message
+
+            Parameters:
+                error_message (Error): The error
+        """
+        print("===================================")
+        print(f"{error.name}: \n'{error}'")
+        print(f"file name: {sys.exc_info()[-1].tb_frame.f_code.co_filename}")
+        print(f"error line number: {sys.exc_info()[-1].tb_lineno}")
+        print("-----------------------------------")
+        print(f"Traceback: \n{error.with_traceback()}")
+        print("-----------------------------------")
+        print("===================================")
+        sleep(10)
