@@ -41,12 +41,6 @@ class WindowInfoGetter:
                 "You must have pyobjc installed to use this module"
             )
 
-        spam_spec = importlib.util.find_spec("Quartz")
-        if spam_spec is None:
-            raise ModuleNotFoundError(
-                "You must have pyobjc installed to use this module"
-            )
-
         from AppKit import (
             NSWorkspace,
         )  # E0611: No name 'NSWorkspace' in module 'AppKit'
@@ -130,9 +124,24 @@ class WindowInfoGetter:
         except NameError:
             print("NameError: %s", sys.exc_info()[0])
             print("error line number: %s", sys.exc_info()[-1].tb_lineno)
+            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
+
+        except ModuleNotFoundError as error:
+            print("ModuleNotFoundError: %s", error)
+            print("error line number: %s", sys.exc_info()[-1].tb_lineno)
+            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
+            print(error.with_traceback())
+            print("Please install the missing module and try again")
+            exit(1)
+
+        except ValueError:
+            print("ValueError: %s", sys.exc_info()[0])
+            print("error line number: %s", sys.exc_info()[-1].tb_lineno)
+            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
 
         except Exception:
             print("Unexpected error: %s", sys.exc_info()[0])
             print("error line number: %s", sys.exc_info()[-1].tb_lineno)
+            print("file name: %s", sys.exc_info()[-1].tb_frame.f_code.co_filename)
 
         return "UnknownApplication", "UnknownWindowName"
