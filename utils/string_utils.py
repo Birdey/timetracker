@@ -34,4 +34,4 @@ def seconds_to_hms_str(seconds: int):
     if seconds != 0:
         r_string += f"{seconds}s"
 
-    return r_string
+    return r_string.strip()
