@@ -1,8 +1,21 @@
+"""
+The main class for the TimeTracker
+
+Author: Christoffer von Matérn @Birdey
+
+Date: 28-06-2021
+
+Version: 1.0
+
+Version history:
+    1.0: Created the class
+"""
+
 import datetime
 import threading
 import time
 import tkinter
-from WindowInfoGetter import WindowInfoGetter
+from window_info_graber import WindowInfoGetter
 
 from WindowManager import WindowManager
 from db import Database
@@ -67,8 +80,8 @@ class TimeTracker:
         print(event)
         app_data = self.database.view_data()
 
-        x = 20
-        y = 70
+        pos_x = 20
+        pos_y = 70
 
         app_time_total = {}
         for data in app_data:
@@ -94,20 +107,20 @@ class TimeTracker:
 
         stats_window.add_text("Stats", (150, 10))
 
-        stats_window.add_text("App:", (x, y))
-        stats_window.add_text("Time:", (x + 200, y))
-        stats_window.add_text("Opens:", (x + 300, y))
+        stats_window.add_text("App:", (pos_x, pos_y))
+        stats_window.add_text("Time:", (pos_x + 200, pos_y))
+        stats_window.add_text("Opens:", (pos_x + 300, pos_y))
 
-        y += 20
+        pos_y += 20
 
         for app in app_time_total.items():
             app_name = app[0]
             app_time = seconds_to_hms_str(int(app[1]["time"]))
             app_opens = app[1]["opens"]
-            stats_window.add_text(f"{app_name}:", (x, y))
-            stats_window.add_text(f"{app_time}", (x + 200, y))
-            stats_window.add_text(f"{app_opens}", (x + 300, y))
-            y += 20
+            stats_window.add_text(f"{app_name}:", (pos_x, pos_y))
+            stats_window.add_text(f"{app_time}", (pos_x + 200, pos_y))
+            stats_window.add_text(f"{app_opens}", (pos_x + 300, pos_y))
+            pos_y += 20
 
         stats_window.show()
 
@@ -119,8 +132,8 @@ class TimeTracker:
         print(event)
         app_data = self.database.view_data()
 
-        x = 20
-        y = 70
+        pos_x = 20
+        pos_y = 70
 
         app_time_total = {}
         for data in app_data:
@@ -146,20 +159,20 @@ class TimeTracker:
 
         stats_window.add_text("Stats", (150, 10))
 
-        stats_window.add_text("App:", (x, y))
-        stats_window.add_text("Time:", (x + 200, y))
-        stats_window.add_text("Opens:", (x + 300, y))
+        stats_window.add_text("App:", (pos_x, pos_y))
+        stats_window.add_text("Time:", (pos_x + 200, pos_y))
+        stats_window.add_text("Opens:", (pos_x + 300, pos_y))
 
-        y += 20
+        pos_y += 20
 
         for app in app_time_total.items():
             app_name = app[0]
             app_time = seconds_to_hms_str(int(app[1]["time"]))
             app_opens = app[1]["opens"]
-            stats_window.add_text(f"{app_name}:", (x, y))
-            stats_window.add_text(f"{app_time}", (x + 200, y))
-            stats_window.add_text(f"{app_opens}", (x + 300, y))
-            y += 20
+            stats_window.add_text(f"{app_name}:", (pos_x, pos_y))
+            stats_window.add_text(f"{app_time}", (pos_x + 200, pos_y))
+            stats_window.add_text(f"{app_opens}", (pos_x + 300, pos_y))
+            pos_y += 20
 
         stats_window.show()
 
@@ -177,11 +190,9 @@ class TimeTracker:
             print(f"time: {seconds_to_hms_str(end_time - start_time)}")
             return
         running_time = end_time - start_time
-        hms = seconds_to_hms_str(int(running_time))
         self.database.add_data(application_name, running_time, datetime.date.today())
-        total_time = round(self.database.total_time_spent_on_app(application_name), 2)
 
-    def start_button_callback(self, event: tkinter.Event):
+    def start_button_callback(self, event):  # pylint: disable=unused-argument
         """
         Start scanning for the current window
         """
@@ -191,11 +202,10 @@ class TimeTracker:
         self.start_button["state"] = "disabled"
         self.stop_button["state"] = "normal"
 
-    def stop_button_callback(self, event):
+    def stop_button_callback(self, event):  # pylint: disable=unused-argument
         """
         Stop scanning for the current window
         """
-        print(event)
         self.scanning = False
 
         self.start_button["state"] = "normal"

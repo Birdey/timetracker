@@ -1,3 +1,16 @@
+""" 
+This class gets the current window name and application name
+
+Author: Christoffer von Matérn @Birdey
+
+Date: 28-06-2021
+
+Version: 1.0
+
+Version history:
+    1.0: Created the class
+"""
+
 # pylint: disable=no-name-in-module
 
 import sys
@@ -50,9 +63,6 @@ class WindowInfoGetter:
             if curr_pid == pid:
                 application_name = window["kCGWindowOwnerName"]
                 window_name = window.get("kCGWindowName", "Unknown")
-                # print(
-                #     f"DEBUG: {owner_name} - {window_name} (PID: {pid}, WID: {window_number}): {window_name}"
-                # )
 
         return WindowInfoGetter._review_active_info_darwin(
             application_name, window_name

@@ -29,7 +29,7 @@ The GUI should also allow you to:
 """
 
 
-from TimeTracker import TimeTracker
+from time_tracker import TimeTracker
 
 
 def main():
