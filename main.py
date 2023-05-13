@@ -45,6 +45,7 @@ SCANNING = False
 DB = Database("time_tracker_db.db")
 BTN_START: tkinter.Button
 BTN_STOP: tkinter.Button
+BTN_STATS: tkinter.Button
 
 WINDOW: WindowManager = None
 
@@ -128,20 +129,12 @@ def quit_app():
     quit()
 
 
-def start_app():
+def show_stats(event):
     """
-    Start the program
+    Show the stats window
     """
-    global BTN_START, BTN_STOP, WINDOW
 
-    WINDOW = WindowManager("Time Tracker", (1080, 970))
-
-    # Terminate the program when the window is closed
-    WINDOW.window.protocol("WM_DELETE_WINDOW", func=quit_app)
-    WINDOW.add_text("Time Tracker", (150, 10))
-    BTN_START = WINDOW.add_button("Start", (10, 10), (50, 20), start_button_callback)
-    BTN_STOP = WINDOW.add_button("Stop", (10, 40), (50, 20), stop_button_callback)
-
+    print(event)
     app_data = DB.view_data()
 
     x = 20
@@ -149,7 +142,7 @@ def start_app():
 
     app_time_total = {}
     for data in app_data:
-        name, app_time, app_date = data
+        name, app_time, _ = data
         if name in app_time_total:
             app_time_total[name]["time"] += app_time
             app_time_total[name]["opens"] += 1
@@ -167,33 +160,61 @@ def start_app():
         )
     }
 
-    # WINDOW.add_text("Total time spent on apps", (x, y))
-    WINDOW.add_text("App:", (x, y))
-    WINDOW.add_text("Time:", (x + 200, y))
-    WINDOW.add_text("Opens:", (x + 300, y))
+    stats_window = WindowManager("Stats", (600, 700))
+
+    stats_window.add_text("Stats", (150, 10))
+
+    stats_window.add_text("App:", (x, y))
+    stats_window.add_text("Time:", (x + 200, y))
+    stats_window.add_text("Opens:", (x + 300, y))
+
     y += 20
 
     for app in app_time_total.items():
         app_name = app[0]
         app_time = seconds_to_hms(int(app[1]["time"]))
         app_opens = app[1]["opens"]
-        WINDOW.add_text(f"{app_name}:", (x, y))
-        WINDOW.add_text(f"{app_time}", (x + 200, y))
-        WINDOW.add_text(f"{app_opens}", (x + 300, y))
+        stats_window.add_text(f"{app_name}:", (x, y))
+        stats_window.add_text(f"{app_time}", (x + 200, y))
+        stats_window.add_text(f"{app_opens}", (x + 300, y))
         y += 20
 
-    # for app in app_time_total.items():
-    #     app_name = app[0]
-    #     app_time = seconds_to_hms(int(app[1]))
-    #     WINDOW.add_text(f"{app_name}: {app_time}", (x, y))
-    #     y += 20
+    stats_window.show()
+
+
+def start_app():
+    """
+    Start the program
+    """
+    global BTN_START, BTN_STOP, BTN_STATS, WINDOW
+
+    WINDOW = WindowManager("Time Tracker", (1080, 970))
+
+    # Terminate the program when the window is closed
+    WINDOW.window.protocol("WM_DELETE_WINDOW", func=quit_app)
+    # set WINDOW background to a light gray
+    WINDOW.window.configure(
+        padx=10,
+        pady=10,
+        borderwidth=2,
+        relief="groove",
+        bd=2,
+        highlightthickness=2,
+        highlightbackground="#a0a0a0",
+        highlightcolor="#a0a0a0",
+    )
+    # WINDOW.window.configgure(bd=2)
+    WINDOW.add_text("Time Tracker", (150, 10))
+    BTN_START = WINDOW.add_button("Start", (10, 10), (50, 20), start_button_callback)
+    BTN_STOP = WINDOW.add_button("Stop", (10, 40), (50, 20), stop_button_callback)
+    BTN_STATS = WINDOW.add_button("Stats", (10, 70), (50, 20), show_stats)
 
     BTN_STOP["state"] = "disabled"
 
     WINDOW.show()
-    while True:
-        WINDOW.update()
-        time.sleep(0.01)
+    # while True:
+    #     WINDOW.update()
+    #     time.sleep(0.01)
 
 
 def seconds_to_hms(seconds: int):
