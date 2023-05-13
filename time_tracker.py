@@ -37,6 +37,10 @@ class TimeTracker:
 
     scanning: bool
 
+    def __init__(self) -> None:
+        self.database = Database("time_tracking.db")
+        self.scanning = False
+
     def run(self) -> None:
         """
         Run the program
