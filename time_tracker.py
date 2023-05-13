@@ -17,9 +17,9 @@ import time
 import tkinter
 from window_info_graber import WindowInfoGetter
 
-from WindowManager import WindowManager
+from window_manager import WindowManager
 from db import Database
-from utils.StringUtils import seconds_to_hms_str
+from utils.string_utils import seconds_to_hms_str
 
 
 class TimeTracker:
