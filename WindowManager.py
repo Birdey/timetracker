@@ -115,10 +115,10 @@ class WindowManager:
                 pos (tuple[int]): The position of the text input
                 size (tuple[int]): The size of the text input
         """
-        input = tk.Entry(self.window)
-        input.insert(0, text)
-        input.place(x=pos[0], y=pos[1], width=size[0], height=size[1])
-        self.last_text_input = input
+        input_box = tk.Entry(self.window)
+        input_box.insert(0, text)
+        input_box.place(x=pos[0], y=pos[1], width=size[0], height=size[1])
+        return input_box
 
     def show_dropdown_menu(
         self, options: list[str], default: str, pos: tuple[int], size: tuple[int]
